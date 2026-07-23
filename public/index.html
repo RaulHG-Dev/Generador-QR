@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generador QR</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Generador QR local</p>
+          <h1>Convierte una URL en un QR elegante y descargable.</h1>
+          <p class="lede">Selecciona el color en hexadecimal, carga un icono central y guarda cada generación en SQLite local.</p>
+        </div>
+      </section>
+
+      <section class="panel grid">
+        <form id="qr-form" class="card form-card">
+          <input id="record-id" name="recordId" type="hidden" />
+
+          <label>
+            Título
+            <input name="title" type="text" placeholder="Entrada principal" required />
+          </label>
+
+          <label>
+            URL destino
+            <input name="url" type="url" placeholder="https://ejemplo.com" required />
+          </label>
+
+          <label>
+            Color hexadecimal
+            <input name="color" type="text" value="#111111" pattern="^#([0-9a-fA-F]{6})$" required />
+          </label>
+
+          <label>
+            Icono central
+            <input name="icon" type="file" accept="image/*" />
+          </label>
+
+          <p id="edit-note" class="hint edit-note" hidden>Estás editando un registro. Puedes dejar el icono vacío para conservar el actual.</p>
+
+          <div class="form-actions">
+            <button id="submit-button" type="submit">Generar QR</button>
+            <button id="cancel-edit" type="button" class="secondary-button" hidden>Cancelar edición</button>
+          </div>
+
+          <p class="hint">La descarga se entrega como SVG para conservar color e icono sin pérdida.</p>
+        </form>
+
+        <section class="card preview-card">
+          <div class="card-header">
+            <h2>Vista previa</h2>
+            <a id="download-link" class="download-link" href="#" download="qr.svg" aria-disabled="true">Descargar SVG</a>
+          </div>
+          <div id="preview" class="preview empty">
+            <span>El QR aparecerá aquí.</span>
+          </div>
+          <div id="status" class="status"></div>
+        </section>
+      </section>
+
+      <section class="panel card history-card">
+        <div class="card-header">
+          <h2>Historial local</h2>
+          <span class="muted">Guardado en `data/qr.sqlite`</span>
+        </div>
+        <div id="history" class="history-list"></div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

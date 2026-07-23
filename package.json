@@ -1,0 +1,23 @@
+{
+  "name": "generador-qr",
+  "version": "1.0.0",
+  "description": "Generador de QR con color, icono centrado, descarga y almacenamiento local en SQLite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "qr",
+    "sqlite",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "qrcode": "^1.5.4",
+    "sql.js": "^1.10.3"
+  }
+}
