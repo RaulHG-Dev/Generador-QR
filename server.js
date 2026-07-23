@@ -164,6 +164,24 @@ function removeIconFile(iconPath) {
   }
 }
 
+function duplicateIconFile(iconPath, recordId) {
+  const sourcePath = getStoredIconPath(iconPath);
+  if (!sourcePath || !fs.existsSync(sourcePath)) {
+    return null;
+  }
+
+  const extension = path.extname(sourcePath) || '.png';
+  const duplicatedFileName = `${recordId}-${crypto.randomBytes(4).toString('hex')}${extension}`;
+  const duplicatedPath = path.join(uploadsDir, duplicatedFileName);
+  fs.copyFileSync(sourcePath, duplicatedPath);
+  return duplicatedFileName;
+}
+
+function buildDuplicatedTitle(title) {
+  const baseTitle = String(title || 'QR').trim();
+  return baseTitle.endsWith(' - copia') ? `${baseTitle} 2` : `${baseTitle} - copia`;
+}
+
 async function initDatabase() {
   SQL = await initSqlJs({
     locateFile: (fileName) => path.join(sqlJsWasmPath, fileName)
@@ -356,6 +374,50 @@ app.delete('/api/qr/:id', (req, res, next) => {
     removeIconFile(record.iconPath);
 
     res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/qr/:id/duplicate', async (req, res, next) => {
+  try {
+    const sourceRecord = fetchRecordById(req.params.id);
+    if (!sourceRecord) {
+      res.status(404).json({ error: 'No se encontró el QR solicitado.' });
+      return;
+    }
+
+    const id = crypto.randomUUID();
+    const title = buildDuplicatedTitle(sourceRecord.title);
+    const createdAt = new Date().toISOString();
+    const iconPath = sourceRecord.iconPath ? duplicateIconFile(sourceRecord.iconPath, id) : null;
+
+    insertRecord({
+      id,
+      title,
+      sourceUrl: sourceRecord.sourceUrl,
+      colorHex: sourceRecord.colorHex,
+      iconPath,
+      createdAt
+    });
+
+    const svg = await buildQrSvg({
+      url: sourceRecord.sourceUrl,
+      color: sourceRecord.colorHex,
+      iconPath: getStoredIconPath(iconPath)
+    });
+
+    res.json({
+      record: {
+        id,
+        title,
+        sourceUrl: sourceRecord.sourceUrl,
+        colorHex: sourceRecord.colorHex,
+        iconPath: iconPath ? `/uploads/${path.basename(iconPath)}` : null,
+        createdAt
+      },
+      svg
+    });
   } catch (error) {
     next(error);
   }

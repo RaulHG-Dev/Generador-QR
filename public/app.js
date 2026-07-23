@@ -70,6 +70,25 @@ async function loadRecordPreview(record) {
   setDownload(svg, `${normalizeFileName(record.title)}.svg`);
 }
 
+async function duplicateRecord(record) {
+  const response = await fetch(`/api/qr/${record.id}/duplicate`, {
+    method: 'POST'
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'No se pudo duplicar el QR.');
+  }
+
+  const duplicatedRecord = payload.record;
+  enterEditMode(duplicatedRecord);
+  preview.classList.remove('empty');
+  preview.innerHTML = payload.svg;
+  setDownload(payload.svg, `${normalizeFileName(duplicatedRecord.title)}.svg`);
+  setStatus(`Se duplicó el QR y ahora puedes editar la copia ${duplicatedRecord.id}.`);
+  await loadHistory();
+}
+
 function truncateUrl(value) {
   return value.length > 90 ? `${value.slice(0, 87)}...` : value;
 }
@@ -113,6 +132,7 @@ async function loadHistory() {
       <div class="actions">
         <div class="swatch" style="background:${record.colorHex}"></div>
         <a class="download-link" href="/api/qr/${record.id}/download" download="${normalizeFileName(record.title)}.svg">Descargar</a>
+        <button type="button" class="secondary-button" data-action="duplicate" data-record-id="${record.id}">Duplicar</button>
         <button type="button" class="secondary-button" data-action="edit" data-record-id="${record.id}">Editar</button>
         <button type="button" class="danger-button" data-action="delete" data-record-id="${record.id}">Eliminar</button>
       </div>
@@ -148,6 +168,15 @@ history.addEventListener('click', async (event) => {
       enterEditMode(record);
       await loadRecordPreview(record);
       setStatus(`Editando el QR de ${truncateUrl(record.sourceUrl)}.`);
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+    return;
+  }
+
+  if (action === 'duplicate') {
+    try {
+      await duplicateRecord(record);
     } catch (error) {
       setStatus(error.message, true);
     }
